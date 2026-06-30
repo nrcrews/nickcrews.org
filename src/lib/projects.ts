@@ -25,6 +25,13 @@ export type Project = {
  */
 export const PROJECTS: Project[] = [
     {
+        name: "Boardwalk",
+        description:
+            "The control plane for agent workflows. Ship them as code.",
+        tags: ["ai", "agent", "web"],
+        href: "https://boardwalk.sh/",
+    },
+    {
         name: "Acadia Worlds",
         description: "An AI powered world building game. Coming soon.",
         tags: ["ai", "agent", "web", "game"],
