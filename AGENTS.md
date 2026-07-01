@@ -92,3 +92,15 @@ These are settled site conventions. Don't relitigate.
   `leadingIcon`). External-link rows still use `↗`.
 - **Projects use a flat tag-based list**, not category groups. Adding
   a new tag means extending the `ProjectTag` union.
+
+## Cursor Cloud specific instructions
+
+- Standard commands are in the `## Commands` section above (`pnpm dev`,
+  `pnpm build`, `pnpm lint`). Node 22 + pnpm 10 are already installed;
+  the startup update script runs `pnpm install`.
+- Run `pnpm dev` in a long-lived tmux session (it does not exit). The
+  dev server serves at `http://localhost:3000`; hot reload picks up new
+  `content/posts/*.md` files without a restart.
+- `pnpm lint` currently reports pre-existing `react/no-unescaped-entities`
+  errors and one unused-var warning in committed source. These are not
+  caused by the environment. Do not "fix" them unless the task asks.
