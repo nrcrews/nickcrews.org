@@ -1,6 +1,9 @@
 # nuckcrews.com
 
-My personal site and blog. Next.js 16, App Router, TypeScript.
+My personal site. Next.js 16, App Router, TypeScript.
+
+The blog lives at [nuck.blog](https://nuck.blog), not here. This site
+just links out to it.
 
 ## Run locally
 
@@ -11,22 +14,12 @@ pnpm dev
 
 Open http://localhost:3000.
 
-## Add a blog post
+## Change where the blog points
 
-Drop a markdown file in `content/posts/`. The filename becomes the slug.
-
-```md
----
-title: Some title
-date: 2026-06-01
-summary: One-line description.
-tags: [ai, opinions]
----
-
-Body. GFM markdown plus fenced code blocks.
-```
-
-Set `draft: true` to keep something out of the archive.
+`SITE.blogUrl` in `src/lib/site.ts` drives the header, home CTA,
+footer, and 404 links. `BLOG_URL` in `next.config.ts` drives the
+redirects from the old `/blog` and `/rss.xml` routes (the latter goes
+to the blog's own feed). Update both.
 
 ## Add a project
 

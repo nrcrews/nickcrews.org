@@ -6,9 +6,14 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## What this is
 
-Nick Crews' personal site and blog at nuckcrews.com. Next.js 16 App
-Router, TypeScript, CSS Modules, pnpm. Statically generated; deployed
-on Vercel.
+Nick Crews' personal site at nuckcrews.com. Next.js 16 App Router,
+TypeScript, CSS Modules, pnpm. Statically generated; deployed on
+Vercel.
+
+The blog is **not** in this repo. It lives at https://nuck.blog
+(`SITE.blogUrl`). Every "blog" affordance here is an outbound link:
+header nav, home CTA, footer, 404. Don't add post routes, markdown
+parsing, or a feed back to this site.
 
 ## Commands
 
@@ -23,15 +28,8 @@ There are no tests yet.
 
 ## Content sources
 
-Both blog posts and projects are content authored in-repo. There is no
-CMS or database.
+Projects are the only in-repo content. There is no CMS or database.
 
-- **Blog posts**: `content/posts/*.md`, parsed at request time by
-  `src/lib/posts.ts` using `gray-matter`. Filename = slug. Frontmatter
-  schema in `PostFrontmatter` (`title`, `date`, `summary`, `tags`,
-  `draft`). Set `draft: true` to exclude from listings, RSS, and
-  sitemap. `getAllPosts` sorts newest-first; `getAdjacentPosts` returns
-  the chronological neighbors used by the prev/next nav on post pages.
 - **Projects**: typed array in `src/lib/projects.ts`. Tags are a
   closed `ProjectTag` union so typos are compile errors. Order is
   manual, newest-first.
@@ -41,9 +39,9 @@ CMS or database.
 - `src/app/` — App Router routes. Pages are Server Components by
   default. CSS Modules co-located per route.
 - `src/lib/site.ts` — canonical site config. `NEXT_PUBLIC_SITE_URL`
-  overrides the prod default; consumed by sitemap, RSS, OG metadata,
-  and the footer's social/contact links. Public email + social handles
-  live here too.
+  overrides the prod default; consumed by sitemap, OG metadata, and the
+  footer's social/contact links. Public email, social handles, and
+  `blogUrl` live here too.
 - `src/ui/button/` — `LinkButton` + `Button` ports of the robotnet
   "lab" button. Variants: `brand` (cloudy-blue CTA), `secondary` (paper),
   `ghost` (transparent). Sizes: `sm` / `md` / `lg`. Internal hrefs
@@ -52,17 +50,16 @@ CMS or database.
   masks so the icon picks up `currentColor`. To add an icon: drop the
   SVG in `/public`, add one row to `GLYPH_SRC` in `glyph.tsx`, and
   extend the `GlyphType` union.
-- `src/app/components/` — site-wide chrome (header, footer, post list,
-  prose renderer). The prose renderer uses `react-markdown` +
-  `remark-gfm`.
+- `src/app/components/` — site-wide chrome (header, footer).
+- `next.config.ts` — 308s from the retired `/blog`, `/blog/:slug`, and
+  `/rss.xml` routes to nuck.blog. Keep `BLOG_URL` there in sync with
+  `SITE.blogUrl`.
 
 ## SEO is wired via App Router conventions
 
-`app/rss.xml/route.ts`, `app/robots.ts`, `app/sitemap.ts`,
-`app/opengraph-image.tsx`, and `app/icon.tsx` are all standard Next 16
-file conventions. RSS is `force-static`. The post page exports
-per-post `openGraph.type=article` metadata and inlines a `BlogPosting`
-JSON-LD script. Don't bolt on `next-seo` or similar.
+`app/robots.ts`, `app/sitemap.ts`, `app/opengraph-image.tsx`, and
+`app/icon.tsx` are all standard Next 16 file conventions. Don't bolt on
+`next-seo` or similar.
 
 ## Design system
 
@@ -88,7 +85,8 @@ These are settled site conventions. Don't relitigate.
 - **Use `LinkButton` for nav-like UI**, not plain `<a>`. Header nav,
   back links, CTAs are all buttons.
 - **Chevron glyphs for back-nav**, not arrow characters (`← All
-  posts` is wrong; use `<Glyph type="chevronLeft" />` as the
-  `leadingIcon`). External-link rows still use `↗`.
+  projects` is wrong; use `<Glyph type="chevronLeft" />` as the
+  `leadingIcon`). External-link rows still use `↗`, including the
+  outbound blog buttons.
 - **Projects use a flat tag-based list**, not category groups. Adding
   a new tag means extending the `ProjectTag` union.

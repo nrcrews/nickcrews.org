@@ -12,7 +12,7 @@ type SocialLink = {
 
 const LINKS: SocialLink[] = [
     { label: `Email ${SITE.email}`, href: `mailto:${SITE.email}`, glyph: "mail" },
-    { label: "RSS feed", href: "/rss.xml", glyph: "rss" },
+    { label: "Blog (nuck.blog)", href: SITE.blogUrl, glyph: "rss", external: true },
     { label: "X (@nuckcrews)", href: SITE.social.twitter.url, glyph: "twitterX", external: true },
     { label: "GitHub (nrcrews)", href: SITE.social.github.url, glyph: "github", external: true },
     { label: "RobotNet (@nick)", href: SITE.social.robotnet.url, glyph: "logo", external: true },

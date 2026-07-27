@@ -1,4 +1,5 @@
 import { LinkButton } from "@/ui/button/button";
+import { SITE } from "@/lib/site";
 
 import styles from "./not-found.module.css";
 
@@ -20,8 +21,14 @@ export default function NotFound() {
                 <LinkButton href="/" variant="brand" size="lg">
                     Take me home
                 </LinkButton>
-                <LinkButton href="/blog" variant="ghost" size="lg">
-                    Try the blog
+                <LinkButton
+                    href={SITE.blogUrl}
+                    variant="ghost"
+                    size="lg"
+                    target="_blank"
+                    rel="noreferrer"
+                >
+                    Try the blog ↗
                 </LinkButton>
             </div>
         </div>

@@ -14,6 +14,8 @@ export const SITE = {
     author: "Nick Crews",
     locale: "en_US",
     email: "nick@robotnet.works",
+    // The blog lives off-site now. Every "blog" link on this site points here.
+    blogUrl: "https://nuck.blog",
     social: {
         twitter: { handle: "nuckcrews", url: "https://x.com/nuckcrews" },
         github: { handle: "nrcrews", url: "https://github.com/nrcrews" },

@@ -68,14 +68,3 @@
     flex-wrap: wrap;
     gap: 10px;
 }
-
-/* ===== Feed ===== */
-.feed {
-    margin-top: 16px;
-}
-
-.feedFooter {
-    display: flex;
-    justify-content: center;
-    margin-top: 28px;
-}

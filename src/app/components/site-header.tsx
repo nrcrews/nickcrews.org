@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { LinkButton } from "@/ui/button/button";
+import { SITE } from "@/lib/site";
 
 import styles from "./site-header.module.css";
 
@@ -15,8 +16,14 @@ export function SiteHeader() {
                     <LinkButton href="/" variant="ghost" size="sm">
                         Home
                     </LinkButton>
-                    <LinkButton href="/blog" variant="ghost" size="sm">
-                        Blog
+                    <LinkButton
+                        href={SITE.blogUrl}
+                        variant="ghost"
+                        size="sm"
+                        target="_blank"
+                        rel="noreferrer"
+                    >
+                        Blog ↗
                     </LinkButton>
                     <LinkButton href="/projects" variant="ghost" size="sm">
                         Projects

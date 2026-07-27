@@ -1,18 +1,10 @@
 import Image from "next/image";
 
-import { PostList } from "./components/post-list";
 import { LinkButton } from "@/ui/button/button";
-import { getAllPosts } from "@/lib/posts";
+import { SITE } from "@/lib/site";
 import styles from "./page.module.css";
 
-const RECENT_COUNT = 5;
-
-export default async function HomePage() {
-    const posts = await getAllPosts();
-    const recent = posts.slice(0, RECENT_COUNT);
-    const latest = posts[0];
-    const hasMore = posts.length > RECENT_COUNT;
-
+export default function HomePage() {
     return (
         <div className={styles.page}>
             <section className={styles.intro}>
@@ -31,36 +23,25 @@ export default async function HomePage() {
                     </span>
                 </h1>
                 <p className={styles.lede}>
-                    My name's not actually nuck (don't call me that), it's Nick, 
+                    My name's not actually nuck (don't call me that), it's Nick,
                     sometimes T (long story).
                     I like to build things and write about it.
                     Follow along.
                 </p>
                 <div className={styles.ctas}>
-                    {latest ? (
-                        <LinkButton
-                            href={`/blog/${latest.slug}`}
-                            variant="brand"
-                            size="lg"
-                        >
-                            Read the latest
-                        </LinkButton>
-                    ) : null}
+                    <LinkButton
+                        href={SITE.blogUrl}
+                        variant="brand"
+                        size="lg"
+                        target="_blank"
+                        rel="noreferrer"
+                    >
+                        Read the blog ↗
+                    </LinkButton>
                     <LinkButton href="/projects" variant="ghost" size="lg">
                         See what I'm building
                     </LinkButton>
                 </div>
-            </section>
-
-            <section className={styles.feed} aria-label="Recent posts">
-                <PostList posts={recent} />
-                {hasMore ? (
-                    <div className={styles.feedFooter}>
-                        <LinkButton href="/blog" variant="secondary">
-                            All posts →
-                        </LinkButton>
-                    </div>
-                ) : null}
             </section>
         </div>
     );
