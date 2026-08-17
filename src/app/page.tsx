@@ -35,7 +35,6 @@ export default function HomePage() {
                 <div className={styles.linkRow}>
                     <a href={SITE.social.github.url}>GitHub</a>
                     <a href={SITE.social.twitter.url}>X</a>
-                    <a href={SITE.social.robotnet.url}>RobotNet</a>
                     <Link href="/contact">Email</Link>
                 </div>
             </nav>
