@@ -5,7 +5,7 @@
  */
 export const SITE = {
     url: (
-        process.env.NEXT_PUBLIC_SITE_URL ?? "https://nuckcrews.com"
+        process.env.NEXT_PUBLIC_SITE_URL ?? "https://nickcrews.org"
     ).replace(/\/$/, ""),
     name: "Nick Crews",
     title: "Nick Crews",
@@ -14,8 +14,7 @@ export const SITE = {
     author: "Nick Crews",
     locale: "en_US",
     email: "nick@robotnet.works",
-    // The blog lives off-site now. Every "blog" link on this site points here.
-    blogUrl: "https://nuck.blog",
+    blogUrl: "/blog",
     social: {
         twitter: { handle: "nuckcrews", url: "https://x.com/nuckcrews" },
         github: { handle: "nrcrews", url: "https://github.com/nrcrews" },
@@ -27,3 +26,5 @@ export function absoluteUrl(path: string): string {
     if (!path.startsWith("/")) path = `/${path}`;
     return `${SITE.url}${path}`;
 }
+
+export const RSS_ALTERNATE = { "application/rss+xml": "/rss.xml" };

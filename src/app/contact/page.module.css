@@ -1,9 +1,11 @@
 .page {
     max-width: var(--page-width);
     margin: 0 auto;
-    padding: 64px var(--page-pad) 72px;
+    padding: 56px var(--page-pad) 72px;
 }
 
 .page h1 {
+    margin-bottom: 24px;
     font-size: 24px;
+    line-height: 1.2;
 }

@@ -18,33 +18,19 @@ export default function OpengraphImage() {
                     flexDirection: "column",
                     justifyContent: "space-between",
                     padding: 80,
-                    background:
-                        "linear-gradient(180deg, #ffffff 0%, #eef5fb 60%, #d2e8f6 100%)",
-                    fontFamily: "system-ui, -apple-system, sans-serif",
+                    background: "#ffffff",
+                    color: "#111111",
+                    fontFamily: "Arial, Helvetica, sans-serif",
                 }}
             >
                 <div
                     style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 14,
                         fontSize: 22,
-                        fontWeight: 600,
-                        letterSpacing: "0.14em",
-                        textTransform: "uppercase",
-                        color: "#1a6db5",
+                        color: "#0000aa",
+                        textDecoration: "underline",
                     }}
                 >
-                    <div
-                        style={{
-                            width: 56,
-                            height: 4,
-                            borderRadius: 2,
-                            background:
-                                "linear-gradient(to right, #94c3e3 0%, #1a6db5 100%)",
-                        }}
-                    />
-                    Personal site
+                    nickcrews.org
                 </div>
                 <div
                     style={{
@@ -55,11 +41,11 @@ export default function OpengraphImage() {
                 >
                     <div
                         style={{
-                            fontSize: 110,
+                            fontSize: 96,
                             fontWeight: 700,
                             letterSpacing: "-0.03em",
                             lineHeight: 1,
-                            color: "#0a0a0a",
+                            color: "#111111",
                         }}
                     >
                         Nick Crews
@@ -67,7 +53,7 @@ export default function OpengraphImage() {
                     <div
                         style={{
                             fontSize: 34,
-                            color: "#1a1f2e",
+                            color: "#333333",
                             maxWidth: 900,
                             lineHeight: 1.3,
                         }}
@@ -81,13 +67,11 @@ export default function OpengraphImage() {
                         justifyContent: "space-between",
                         alignItems: "center",
                         fontSize: 22,
-                        color: "#3a4356",
+                        color: "#555555",
                     }}
                 >
                     <span>{SITE.url.replace(/^https?:\/\//, "")}</span>
-                    <span style={{ fontFamily: "ui-monospace, Menlo, monospace" }}>
-                        est. 2026
-                    </span>
+                    <span>essays · projects</span>
                 </div>
             </div>
         ),

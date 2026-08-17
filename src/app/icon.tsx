@@ -14,14 +14,11 @@ export default function Icon() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    background:
-                        "linear-gradient(180deg, #6aa6d4 0%, #1a6db5 100%)",
-                    color: "#ffffff",
+                    background: "#ffffff",
+                    color: "#111111",
                     fontSize: 24,
-                    fontWeight: 800,
-                    letterSpacing: "-0.04em",
-                    fontFamily: "system-ui, -apple-system, sans-serif",
-                    /* Optical centering — n sits a hair high in most fonts. */
+                    fontWeight: 700,
+                    fontFamily: "Arial, Helvetica, sans-serif",
                     paddingBottom: 2,
                 }}
             >

@@ -1,47 +1,48 @@
 .header {
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    width: 100%;
-    background: rgba(255, 255, 255, 0.82);
-    backdrop-filter: blur(14px) saturate(1.4);
-    -webkit-backdrop-filter: blur(14px) saturate(1.4);
-    border-bottom: var(--border);
+    padding-top: 48px;
 }
 
 .inner {
-    max-width: 960px;
+    max-width: var(--page-width);
     margin: 0 auto;
-    padding: 10px var(--page-pad);
+    padding: 0 var(--page-pad);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 24px;
+    gap: 20px;
 }
 
 .wordmark {
     display: inline-flex;
     align-items: center;
-    text-decoration: none;
-    line-height: 1;
-}
-
-.wordmarkText {
-    font-family: var(--font-display);
+    min-height: 40px;
     font-weight: 700;
-    font-size: 17px;
-    letter-spacing: -0.022em;
-    line-height: 1;
-    transform: translateY(1px);
-    background: var(--gradient-brand);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    -webkit-text-fill-color: transparent;
+    color: var(--text);
 }
 
 .nav {
     display: flex;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.nav a {
+    display: inline-flex;
     align-items: center;
-    gap: 4px;
+    min-height: 40px;
+    padding: 0 4px;
+}
+
+@media (max-width: 480px) {
+    .header {
+        padding-top: 28px;
+    }
+
+    .inner {
+        display: block;
+    }
+
+    .nav {
+        margin-top: 4px;
+    }
 }

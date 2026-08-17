@@ -1,31 +1,9 @@
 import type { Metadata } from "next";
-import { Geist, Inter, JetBrains_Mono } from "next/font/google";
 
 import { SITE } from "@/lib/site";
 import { SiteFooter } from "./components/site-footer";
 import { SiteHeader } from "./components/site-header";
 import "./globals.css";
-
-const geist = Geist({
-    subsets: ["latin"],
-    display: "swap",
-    weight: ["400", "500", "600", "700"],
-    variable: "--font-geist-sans",
-});
-
-const inter = Inter({
-    subsets: ["latin"],
-    display: "swap",
-    weight: ["400", "500", "600"],
-    variable: "--font-inter",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-    subsets: ["latin"],
-    display: "swap",
-    weight: ["400", "500", "600"],
-    variable: "--font-jetbrains-mono",
-});
 
 export const metadata: Metadata = {
     metadataBase: new URL(SITE.url),
@@ -50,9 +28,6 @@ export const metadata: Metadata = {
         description: SITE.description,
         creator: `@${SITE.social.twitter.handle}`,
     },
-    alternates: {
-        canonical: "/",
-    },
     robots: {
         index: true,
         follow: true,
@@ -64,10 +39,7 @@ export default function RootLayout({
     children,
 }: Readonly<{ children: React.ReactNode }>) {
     return (
-        <html
-            lang="en"
-            className={`${geist.variable} ${inter.variable} ${jetbrainsMono.variable}`}
-        >
+        <html lang="en">
             <body>
                 <SiteHeader />
                 <main>{children}</main>

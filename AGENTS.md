@@ -6,14 +6,13 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## What this is
 
-Nick Crews' personal site at nuckcrews.com. Next.js 16 App Router,
+Nick Crews' personal site at nickcrews.org. Next.js 16 App Router,
 TypeScript, CSS Modules, pnpm. Statically generated; deployed on
 Vercel.
 
-The blog is **not** in this repo. It lives at https://nuck.blog
-(`SITE.blogUrl`). Every "blog" affordance here is an outbound link:
-header nav, home CTA, footer, 404. Don't add post routes, markdown
-parsing, or a feed back to this site.
+The blog lives in this repo at `/blog`. Posts are MDX files in
+`src/content/`; the filename is the slug. The old standalone nuck.blog
+source has been folded into this app.
 
 ## Commands
 
@@ -28,11 +27,14 @@ There are no tests yet.
 
 ## Content sources
 
-Projects are the only in-repo content. There is no CMS or database.
+There is no CMS or database.
 
 - **Projects**: typed array in `src/lib/projects.ts`. Tags are a
   closed `ProjectTag` union so typos are compile errors. Order is
   manual, newest-first.
+- **Posts**: MDX files in `src/content/`. Each file exports `metadata`
+  with `title`, ISO `date`, and optional `summary`. Posts are listed
+  newest-first by `src/lib/posts.ts` and statically generated.
 
 ## Architecture
 
@@ -40,20 +42,11 @@ Projects are the only in-repo content. There is no CMS or database.
   default. CSS Modules co-located per route.
 - `src/lib/site.ts` — canonical site config. `NEXT_PUBLIC_SITE_URL`
   overrides the prod default; consumed by sitemap, OG metadata, and the
-  footer's social/contact links. Public email, social handles, and
-  `blogUrl` live here too.
-- `src/ui/button/` — `LinkButton` + `Button` ports of the robotnet
-  "lab" button. Variants: `brand` (cloudy-blue CTA), `secondary` (paper),
-  `ghost` (transparent). Sizes: `sm` / `md` / `lg`. Internal hrefs
-  auto-route through `next/link`.
-- `src/ui/glyph/` — single-color SVGs in `/public` rendered as CSS
-  masks so the icon picks up `currentColor`. To add an icon: drop the
-  SVG in `/public`, add one row to `GLYPH_SRC` in `glyph.tsx`, and
-  extend the `GlyphType` union.
+  site's links. Public email, social handles, and `blogUrl` live here too.
 - `src/app/components/` — site-wide chrome (header, footer).
-- `next.config.ts` — 308s from the retired `/blog`, `/blog/:slug`, and
-  `/rss.xml` routes to nuck.blog. Keep `BLOG_URL` there in sync with
-  `SITE.blogUrl`.
+- `src/app/blog/` — essay index and statically generated post pages.
+- `src/app/rss.xml/route.ts` — statically generated RSS feed.
+- `next.config.ts` — MDX support through `@next/mdx`.
 
 ## SEO is wired via App Router conventions
 
@@ -61,17 +54,13 @@ Projects are the only in-repo content. There is no CMS or database.
 `app/icon.tsx` are all standard Next 16 file conventions. Don't bolt on
 `next-seo` or similar.
 
-## Design system
+## Design
 
-A slimmed adaptation of the robotnet "lab" design system at
-`../rbnx/RobotNetworks/robotnet-web/src/app/lab/` (external to this
-repo, read-only reference). Late-2000s Aqua/Web-2.0 feel: paper
-backgrounds, cloudy-blue palette, hairline borders, glassy gradients,
-brand-gradient wordmark.
-
-Tokens live in `src/app/globals.css` at `:root` (not scoped to
-`[data-lab]` like the original). Three fonts loaded in
-`layout.tsx`: Geist (display), Inter (body), JetBrains Mono.
+The site is deliberately plain and document-like, inspired by early
+personal essay sites. It uses a narrow text column, system fonts, white
+backgrounds, ordinary underlined links, and minimal header/footer chrome.
+There is no component design system, custom webfont stack, decorative
+surface treatment, or animation layer.
 
 ## Voice + design conventions
 
@@ -80,13 +69,10 @@ These are settled site conventions. Don't relitigate.
 - **Voice**: clever-but-restrained. One understated beat per paragraph
   max. No em dashes in user-facing copy (use periods, parens, or
   restructured sentences). Code comments may use em dashes.
-- **No mono-uppercase "eyebrow" tags above page titles.** The lab uses
-  them; this site doesn't.
-- **Use `LinkButton` for nav-like UI**, not plain `<a>`. Header nav,
-  back links, CTAs are all buttons.
-- **Chevron glyphs for back-nav**, not arrow characters (`← All
-  projects` is wrong; use `<Glyph type="chevronLeft" />` as the
-  `leadingIcon`). External-link rows still use `↗`, including the
-  outbound blog buttons.
-- **Projects use a flat tag-based list**, not category groups. Adding
-  a new tag means extending the `ProjectTag` union.
+- **Prefer native text links.** Use `next/link` for internal routes and
+  plain anchors for external destinations. Do not introduce button-like
+  navigation, icon-only links, cards, pills, gradients, or shadows.
+- **Keep the document narrow.** The shared width is defined by
+  `--page-width` in `src/app/globals.css`.
+- **Projects use a flat text list**, not cards or category groups. Tags
+  remain typed content metadata but are not presented as UI chips.

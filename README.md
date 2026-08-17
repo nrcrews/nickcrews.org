@@ -1,9 +1,9 @@
-# nuckcrews.com
+# nickcrews.org
 
 My personal site. Next.js 16, App Router, TypeScript.
 
-The blog lives at [nuck.blog](https://nuck.blog), not here. This site
-just links out to it.
+The blog lives in this app at `/blog`. Posts are MDX files in
+`src/content/`.
 
 ## Run locally
 
@@ -14,12 +14,10 @@ pnpm dev
 
 Open http://localhost:3000.
 
-## Change where the blog points
+## Add a post
 
-`SITE.blogUrl` in `src/lib/site.ts` drives the header, home CTA,
-footer, and 404 links. `BLOG_URL` in `next.config.ts` drives the
-redirects from the old `/blog` and `/rss.xml` routes (the latter goes
-to the blog's own feed). Update both.
+Add an `.mdx` file to `src/content/`. Export a `metadata` object with a
+title, ISO date, and optional summary. The filename becomes the URL slug.
 
 ## Add a project
 
