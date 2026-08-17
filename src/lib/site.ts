@@ -28,3 +28,4 @@ export function absoluteUrl(path: string): string {
 }
 
 export const RSS_ALTERNATE = { "application/rss+xml": "/rss.xml" };
+export const BLOG_DESCRIPTION = "Notes on technology and life.";

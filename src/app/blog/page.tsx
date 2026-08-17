@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { formatDate, getPosts } from "@/lib/posts";
-import { RSS_ALTERNATE } from "@/lib/site";
+import { BLOG_DESCRIPTION, RSS_ALTERNATE } from "@/lib/site";
 import styles from "./blog.module.css";
 
 export const metadata: Metadata = {
     title: "Essays",
-    description: "Notes on technology and whatever I'm currently building.",
+    description: BLOG_DESCRIPTION,
     alternates: { canonical: "/blog", types: RSS_ALTERNATE },
 };
 
@@ -18,7 +18,7 @@ export default async function BlogPage() {
         <div className={styles.page}>
             <header>
                 <h1>Essays</h1>
-                <p>Notes on technology and whatever I&apos;m currently building.</p>
+                <p>{BLOG_DESCRIPTION}</p>
             </header>
             <ul className={styles.list}>
                 {posts.map((post) => (

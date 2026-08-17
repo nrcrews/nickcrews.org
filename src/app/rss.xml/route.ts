@@ -1,5 +1,5 @@
 import { getPosts } from "@/lib/posts";
-import { absoluteUrl, SITE } from "@/lib/site";
+import { absoluteUrl, BLOG_DESCRIPTION, SITE } from "@/lib/site";
 
 export const dynamic = "force-static";
 
@@ -41,7 +41,7 @@ export async function GET() {
   <channel>
     <title>${escapeXml(SITE.name)}</title>
     <link>${SITE.url}/blog</link>
-    <description>${escapeXml(SITE.description)}</description>
+    <description>${escapeXml(BLOG_DESCRIPTION)}</description>
     <language>en</language>
     <dc:creator>${escapeXml(SITE.author)}</dc:creator>${
         posts[0]
