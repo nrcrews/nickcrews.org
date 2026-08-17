@@ -15,11 +15,7 @@ export default function ProjectsPage() {
         <div className={styles.page}>
             <header>
                 <h1>Things I&apos;ve built</h1>
-                <p>
-                    Some are live, some are quietly retired, a few are still
-                    figuring out what they want to be. Reach out if any of
-                    them spark a question.
-                </p>
+                <p>My favorite projects over the years, in chronologic(ish) order</p>
             </header>
 
             <ul className={styles.list}>
