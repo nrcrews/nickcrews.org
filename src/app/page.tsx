@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 import { SITE } from "@/lib/site";
+import mainPhoto from "./main-photo.jpg";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
@@ -12,13 +14,14 @@ export default function HomePage() {
     return (
         <div className={styles.page}>
             <figure className={styles.photo}>
-                <div
-                    className={styles.placeholder}
-                    role="img"
-                    aria-label="Placeholder for a photo from Nick's phone"
-                >
-                    Photo goes here
-                </div>
+                <Image
+                    src={mainPhoto}
+                    alt="A person lying in the grass beneath a tree under a blue sky"
+                    className={styles.photoImage}
+                    sizes="(max-width: 450px) calc(100vw - 40px), 410px"
+                    placeholder="blur"
+                    preload
+                />
                 <figcaption>A picture from my phone</figcaption>
             </figure>
 

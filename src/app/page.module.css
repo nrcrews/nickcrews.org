@@ -9,14 +9,11 @@
     margin: 0 0 40px;
 }
 
-.placeholder {
-    display: grid;
+.photoImage {
+    display: block;
     width: 100%;
-    aspect-ratio: 4 / 3;
-    place-items: center;
-    color: var(--muted);
-    background: #f5f5f5;
-    outline: 1px dashed #aaaaaa;
+    height: auto;
+    outline: 1px solid rgba(0, 0, 0, 0.1);
     outline-offset: -1px;
 }
 
