@@ -4,85 +4,91 @@ export const metadata = {
   summary: "Cut an H100 from 700 W to 415 W and decode keeps 96% of its speed. Prefill keeps 74%. Here's why.",
 };
 
-Inference has two phases, and they stress a GPU in opposite ways.
+An H100 will draw up to 700 watts. One command, `nvidia-smi -pl`, tells it to draw less. I wanted
+to know what that costs an inference server, and the answer turned out to depend on which half of
+inference you ask.
 
-**Prefill** reads the prompt. Every weight pulled from memory is used for thousands of tokens at
-once, so the cores are the bottleneck. **Decode** writes the answer, one token per request per
-step. Every step reads every weight and does little math with it, so memory is the bottleneck and
-the cores spend much of their time waiting.
+## Two jobs, one chip
 
-A power cap has one lever: the core clock. So the two phases should react differently. I measured
-how differently.
+Serving a model is two different workloads sharing a GPU.
 
-**Setup:** eight H100 SXM cards (700 W max) running vLLM, four serving Qwen3-8B and four serving
-Qwen3-14B, each swept from 700 W down to 200 W with 32 requests in flight. Every card is compared
-with its own uncapped run. The two models agree within a few points; the charts show the 8B. Code and
-raw data: [github.com/nrcrews/tokens-per-watt](https://github.com/nrcrews/tokens-per-watt).
+Prefill reads the prompt. The model's weights are pulled from memory once and applied to thousands
+of prompt tokens at a time, so the arithmetic dominates and the cores are the bottleneck.
+
+Decode writes the answer, one token per request per step. Each step pulls every weight from memory
+again but does only a sliver of math with it. Here memory is the bottleneck. The cores finish
+early and wait.
+
+A power cap works through a single lever: it lowers the core clock. That should hurt the phase
+that needs the cores and spare the one that's waiting on memory. I measured how much.
+
+I ran vLLM on eight H100 SXM cards, four serving Qwen3-8B and four serving Qwen3-14B, and stepped
+each card from 700 W down to 200 W with 32 requests in flight. Each card is compared against its
+own uncapped run. The two models land within a few points of each other, so the charts show the
+8B. Code and raw data are on [GitHub](https://github.com/nrcrews/tokens-per-watt).
 
 ## Decode barely notices
 
-At 415 W, 59% of the card's maximum, decode keeps 96% of its speed. Prefill keeps 74%.
+At 415 W, about 60% of the card's maximum, decode keeps 96% of its speed. Prefill keeps 74%.
 
 ![Speed against power limit](/images/power-limits-and-inference/speed.png)
 
-*Shaded: the limits where decode keeps at least 95% of its uncapped speed.*
+*The shaded region is where decode keeps at least 95% of its uncapped speed.*
 
-## The clock explains it
-
-At 415 W both phases lose about a quarter of their clock. Prefill loses the same quarter of its
-speed: it is compute-bound, so speed follows clock one to one. Decode loses 4%. Its cores were
-waiting on memory, and waiting at a lower clock costs almost nothing.
+The clock shows why. At 415 W both phases run about a quarter fewer cycles per second. Prefill
+loses that same quarter of its throughput, because every cycle was doing useful math. Decode loses
+4%, because most of its cycles were spent waiting for memory, and memory doesn't slow down when the
+core clock does.
 
 ![Core clock against power limit](/images/power-limits-and-inference/clock.png)
 
-*Decode holds full clock down to 555 W. Uncapped, it only draws about 525 W, so the top of the
-range does nothing for it.*
+*Decode holds its full clock down to 555 W. Uncapped, it draws only about 525 W, so the top of
+the power range does nothing for it.*
 
 ## Slower is cheaper
 
-A chip's dynamic power scales with voltage squared times frequency. A lower clock lets the
-voltage drop too, so each operation costs less energy, and energy per token falls faster than
+Running slower also makes each token cheaper. A chip's dynamic power scales with frequency times
+voltage squared, and a lower clock lets the voltage come down with it. Energy falls faster than
 speed.
 
-At 415 W, decode gets 23% more tokens per joule and prefill 25%. No other limit gives both a
-gain that large.
+At 415 W, decode produces 23% more tokens per joule and prefill 25%. No other setting gives both
+phases a gain that large.
 
 ![Tokens per joule against power limit](/images/power-limits-and-inference/efficiency.png)
 
-*Decode's efficiency peaks lower, around 270–345 W, but by 270 W it has lost 29% of its speed.*
+*Decode's efficiency climbs until about 345 W and then levels off, but by then it's 8% slower.*
 
-## Where it breaks
+## Then it falls off a cliff
 
-Below about 345 W the clock collapses. At 200 W decode runs at 345 MHz and keeps about half its
-speed. Prefill hits the wall sooner: from 415 W to 345 W its clock falls by a third while the
-limit falls only 17%.
+Below about 345 W the clock collapses. At 200 W, decode runs at 345 MHz, a sixth of its uncapped
+clock, and keeps only about half its speed. Prefill gets there first: between 415 W and 345 W its
+clock drops by a third while the limit drops by only a sixth.
 
-The likely cause is the voltage floor. Once the voltage can't go lower, every watt saved has to
-come from the clock alone, while memory and the rest of the board keep drawing their share. I
-didn't measure voltage, so treat that as a hypothesis.
+My best guess is the voltage floor. Above it, the chip saves power by lowering both voltage and
+clock, which is cheap. Once voltage can't go any lower, every watt has to come out of the clock
+alone, while memory and the rest of the board keep drawing their share. I didn't measure voltage,
+so treat that as a hypothesis.
 
-Batch size moves the line. More requests in flight means more math per weight read, so decode
-starts to behave like prefill.
+Batch size moves the cliff, too. More requests in flight means more math per weight read, and
+decode starts to look like prefill.
 
 ![Decode speed by requests in flight](/images/power-limits-and-inference/concurrency.png)
 
 *At 270 W, decode keeps 85% of its speed with one request in flight and 71% with 32.*
 
-## The PCIe card
+The 350 W H100 PCIe tells the same story without the cliff. At 245 W, decode keeps 96% of its
+speed for 21% more tokens per joule. At 200 W it's still at 87%, with the clock near 1 GHz.
 
-The 350 W H100 PCIe shows the same split without the cliff. At 245 W decode keeps 96% of its
-speed with 21% more tokens per joule, and prefill keeps 68%. At its 200 W floor decode still keeps
-87%, with the clock near 1 GHz. One thing I can't explain yet: on PCIe, prefill gets slightly less
-efficient under a cap.
+## What it means
 
-## What to do with it
+Decode doesn't need a full-power GPU. On an H100 SXM, 415 W costs it 4% of its speed and saves
+about a fifth of the energy per token. Prefill does need the power: it slows in step with the
+clock.
 
-- **Decode doesn't need full power.** On an H100 SXM, 415 W costs 4% of decode speed for about a
-  fifth less energy per token.
-- **Prefill does.** Its speed tracks the clock.
-- **Don't go below about 345 W on SXM.** The clock falls off a cliff and the savings go with it.
-- **Batch size matters.** The bigger the batch, the more decode behaves like prefill.
+So the right power limit depends on the job. A GPU doing mostly decode can be capped hard. One
+doing mostly prefill shouldn't be. Neither should go below the cliff.
 
-These numbers count GPU power only, not CPU, networking or cooling. They cover two models, one
-engine and batch sizes of 1 and 32. The raw data, every chart and the code to rerun it on your own
-GPU are on GitHub: [nrcrews/tokens-per-watt](https://github.com/nrcrews/tokens-per-watt).
+These numbers count the GPU alone, not the CPU, network or cooling around it, and cover two models
+on one engine. Next I want to measure voltage and memory clock through the cliff, to see whether
+the floor is really what's breaking. Everything needed to rerun this on your own GPU is in the
+[repo](https://github.com/nrcrews/tokens-per-watt).
