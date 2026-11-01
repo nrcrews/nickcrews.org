@@ -27,7 +27,7 @@ export const PROJECTS: Project[] = [
     {
         name: "Boardwalk",
         description:
-            "The control plane for agent workflows. Ship them as code.",
+            "Elastic inference. GPU capacity that scales with demand.",
         tags: ["ai", "agent", "web"],
         href: "https://boardwalk.sh/",
     },
