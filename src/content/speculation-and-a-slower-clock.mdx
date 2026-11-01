@@ -1,0 +1,79 @@
+export const metadata = {
+  title: "Speculation and a slower clock",
+  date: "2026-11-01",
+  summary: "Speculative decoding and a locked GPU clock both cut decode energy. Together they save 62% at small batches, and less than you'd hope at large ones.",
+};
+
+## Two savings, one source
+
+My [last post](/blog/power-limits-and-inference) found that decode barely needs the GPU's full
+clock. It spends most of each step waiting on memory, so a slower clock costs little speed and
+saves a lot of energy.
+
+Speculative decoding gets its savings from the same place. A small draft model guesses the next
+few tokens, and the big model checks them all in one pass. Checking several tokens costs about
+the same as generating one, because the cores were idle anyway. When the guesses are right, you
+get several tokens for the price of one step.
+
+Both tricks spend the GPU's idle compute. So I wanted to know whether they add up, or whether
+speculation uses up the slack a slower clock would otherwise give back.
+
+## The setup
+
+I served Qwen3-8B with vLLM on an H100 PCIe, a 350 W card with a maximum core clock of 1755 MHz.
+The draft model was EAGLE-3 (a published speculator for Qwen3-8B), guessing three tokens at a
+time. The prompts were real coding tasks and chat questions, since a draft model needs real text
+to guess well. It kept 43 to 50% of its guesses.
+
+For each batch size from 1 to 128 requests in flight, I measured energy per token at the default
+clock and at six locked clocks from 1755 MHz down to 705 MHz, with speculation off and then on.
+Energy came from the GPU's own counter. The code and raw data are on
+[GitHub](https://github.com/nrcrews/spec-joules), and the whole run cost under $3 of GPU time.
+
+## Stacking, then competing
+
+With one request in flight, the best locked clock alone saves 23% of the energy per token.
+Speculation alone saves 50%. Together they save 62%, and the GPU still decodes 1.65 times faster
+than it does with neither.
+
+The right comparison isn't the sum, 73%. Two independent savings compound: if speculation leaves
+half the energy, a 23% clock saving applies to that half. That predicts 61%, and the measured 62%
+matches it. Up to 16 requests in flight, the two savings stack like that.
+
+![Energy saved by a lower clock, by speculation and by both, per batch size](/images/speculation-and-a-slower-clock/headline.png)
+
+Past 16, they start to compete. At 32 requests in flight, independent savings would give 55% and
+the pair delivers 50%. At 64, 45% predicted and 34% measured. At 128, speculation alone saves only
+9%, and the pair saves 15%, barely more than the clock's 13%.
+
+## Why they collide
+
+At small batches the GPU is mostly waiting on memory, so there is idle compute for speculation to
+use and idle time for a slower clock to reclaim. The two barely overlap.
+
+![Energy per token against locked clock, one request in flight](/images/speculation-and-a-slower-clock/energy-b1.png)
+
+At large batches the idle compute is gone. Every verification pass now does real work for 128
+requests, and the extra guessed tokens compete with real ones for the same cores. Speculation has
+less to give, and so does the clock, because a busier GPU needs its cycles.
+
+![Energy per token against locked clock, 128 requests in flight](/images/speculation-and-a-slower-clock/energy-b128.png)
+
+I expected the best clock to rise with speculation on, since speculation makes decode do more
+math per byte. It mostly didn't. Energy per token bottomed out around 915 MHz with or without the
+draft model, at nearly every batch size. Below that, decode slowed as fast as power fell, so
+the savings stopped.
+
+![Best clock per batch size, with and without speculation](/images/speculation-and-a-slower-clock/best-clock.png)
+
+One card is a narrow test. This PCIe card already runs near its 350 W limit at large batches,
+which caps what a lower clock can save there. A 700 W SXM card may do better.
+
+## What it means
+
+Use both, but know where the second one stops paying. At the small batches typical of
+latency-sensitive serving, speculation and a locked clock of about half the maximum together cut
+energy per token by around 60% and still make decode faster. At large batches, pick one. The
+clock is the safer bet, since it never depends on how well the draft guesses.
+
+Neither needs new hardware. One is a config flag and the other is a single `nvidia-smi` command.
