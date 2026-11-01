@@ -4,9 +4,13 @@ export const metadata = {
   summary: "Cut an H100 from 700 W to 415 W and decode keeps 96% of its speed. Prefill keeps 74%. Here's why.",
 };
 
-An H100 will draw up to 700 watts. One command, `nvidia-smi -pl`, tells it to draw less. I wanted
-to know what that costs an inference server, and the answer turned out to depend on which half of
-inference you ask.
+When power is the constraint on a GPU fleet, the useful question is what each watt buys. For
+inference, the answer depends on what the GPU is doing.
+
+Reading a prompt and writing a response are different workloads, and they respond to a power cap
+in opposite ways. On an H100, cutting the limit from 700 W to 415 W costs response generation 4% of
+its speed and makes each token about a fifth cheaper in energy. Prompt processing loses a quarter
+of its speed. This post measures that gap and explains where it comes from.
 
 ## Two jobs, one chip
 
