@@ -4,95 +4,60 @@ export const metadata = {
   summary: "Cut an H100 from 700 W to 415 W and decode keeps 96% of its speed. Prefill keeps 74%. Here's why.",
 };
 
-When power is the constraint on a GPU fleet, the useful question is what each watt buys. For
-inference, the answer depends on what the GPU is doing.
+## What I measured
 
-Reading a prompt and writing a response are different workloads, and they respond to a power cap
-in opposite ways. On an H100, cutting the limit from 700 W to 415 W costs response generation 4% of
-its speed and makes each token about a fifth cheaper in energy. Prompt processing loses a quarter
-of its speed. This post measures that gap and explains where it comes from.
+How a GPU's power limit changes inference speed and energy use, measured separately for the two
+phases of inference:
 
-## Two jobs, one chip
+- **Prefill**: reading the prompt.
+- **Decode**: writing the response, one token at a time.
 
-Serving a model is two different workloads sharing a GPU.
+## How
 
-Prefill reads the prompt. The model's weights are pulled from memory once and applied to thousands
-of prompt tokens at a time, so the arithmetic dominates and the cores are the bottleneck.
+Eight H100 SXM GPUs (700 W max) running vLLM: four serving Qwen3-8B, four serving Qwen3-14B. I
+stepped each GPU's power limit from 700 W down to 200 W and, at each step, measured prefill and
+decode throughput with 32 requests in flight, along with energy from the GPU's own counter. Each
+GPU is compared with its own uncapped run. The two models agree within a few points, so the charts
+show the 8B. Code and raw data are on [GitHub](https://github.com/nrcrews/tokens-per-watt).
 
-Decode writes the answer, one token per request per step. Each step pulls every weight from memory
-again but does only a sliver of math with it. Here memory is the bottleneck. The cores finish
-early and wait.
+## Results
 
-A power cap works through a single lever: it lowers the core clock. That should hurt the phase
-that needs the cores and spare the one that's waiting on memory. I measured how much.
-
-I ran vLLM on eight H100 SXM cards, four serving Qwen3-8B and four serving Qwen3-14B, and stepped
-each card from 700 W down to 200 W with 32 requests in flight. Each card is compared against its
-own uncapped run. The two models land within a few points of each other, so the charts show the
-8B. Code and raw data are on [GitHub](https://github.com/nrcrews/tokens-per-watt).
-
-## Decode barely notices
-
-At 415 W, about 60% of the card's maximum, decode keeps 96% of its speed. Prefill keeps 74%.
+At 415 W, decode keeps 96% of its speed. Prefill keeps 74%.
 
 ![Speed against power limit](/images/power-limits-and-inference/speed.png)
 
-*The shaded region is where decode keeps at least 95% of its uncapped speed.*
-
-The clock shows why. At 415 W both phases run about a quarter fewer cycles per second. Prefill
-loses that same quarter of its throughput, because every cycle was doing useful math. Decode loses
-4%, because most of its cycles were spent waiting for memory, and memory doesn't slow down when the
-core clock does.
-
-![Core clock against power limit](/images/power-limits-and-inference/clock.png)
-
-*Decode holds its full clock down to 555 W. Uncapped, it draws only about 525 W, so the top of
-the power range does nothing for it.*
-
-## Slower is cheaper
-
-Running slower also makes each token cheaper. A chip's dynamic power scales with frequency times
-voltage squared, and a lower clock lets the voltage come down with it. Energy falls faster than
-speed.
-
-At 415 W, decode produces 23% more tokens per joule and prefill 25%. No other setting gives both
-phases a gain that large.
+At the same 415 W, decode gets 23% more tokens per joule and prefill 25%.
 
 ![Tokens per joule against power limit](/images/power-limits-and-inference/efficiency.png)
 
-*Decode's efficiency climbs until about 345 W and then levels off, but by then it's 8% slower.*
-
-## Then it falls off a cliff
-
-Below about 345 W the clock collapses. At 200 W, decode runs at 345 MHz, a sixth of its uncapped
-clock, and keeps only about half its speed. Prefill gets there first: between 415 W and 345 W its
-clock drops by a third while the limit drops by only a sixth.
-
-My best guess is the voltage floor. Above it, the chip saves power by lowering both voltage and
-clock, which is cheap. Once voltage can't go any lower, every watt has to come out of the clock
-alone, while memory and the rest of the board keep drawing their share. I didn't measure voltage,
-so treat that as a hypothesis.
-
-Batch size moves the cliff, too. More requests in flight means more math per weight read, and
-decode starts to look like prefill.
+Below about 345 W, both fall off sharply. At 200 W decode keeps about half its speed. Larger
+batches feel the cap sooner: at 270 W decode keeps 85% of its speed with one request in flight
+and 71% with 32.
 
 ![Decode speed by requests in flight](/images/power-limits-and-inference/concurrency.png)
 
-*At 270 W, decode keeps 85% of its speed with one request in flight and 71% with 32.*
+The 350 W H100 PCIe shows the same pattern without the sharp drop: at 245 W decode keeps 96% of
+its speed, and at 200 W it still keeps 87%.
 
-The 350 W H100 PCIe tells the same story without the cliff. At 245 W, decode keeps 96% of its
-speed for 21% more tokens per joule. At 200 W it's still at 87%, with the clock near 1 GHz.
+## Why
 
-## What it means
+A power limit works by lowering the GPU's core clock.
 
-Decode doesn't need a full-power GPU. On an H100 SXM, 415 W costs it 4% of its speed and saves
-about a fifth of the energy per token. Prefill does need the power: it slows in step with the
-clock.
+Prefill does a lot of math for every weight it reads from memory, so it's limited by the cores.
+At 415 W the clock falls about 25%, and prefill slows by the same amount.
 
-So the right power limit depends on the job. A GPU doing mostly decode can be capped hard. One
-doing mostly prefill shouldn't be. Neither should go below the cliff.
+Decode reads every weight from memory for each token but does little math with it, so it's
+limited by memory. Its cores spend much of their time waiting. At 415 W its clock also falls about
+25%, but its speed falls only 4%, because memory runs just as fast as before.
 
-These numbers count the GPU alone, not the CPU, network or cooling around it, and cover two models
-on one engine. Next I want to measure voltage and memory clock through the cliff, to see whether
-the floor is really what's breaking. Everything needed to rerun this on your own GPU is in the
-[repo](https://github.com/nrcrews/tokens-per-watt).
+![Core clock against power limit](/images/power-limits-and-inference/clock.png)
+
+Running at a lower clock is also more efficient. A chip's power scales with frequency times
+voltage squared, and a lower clock allows a lower voltage, so energy per token falls faster than
+speed.
+
+Larger batches do more math per weight read, so decode behaves more like prefill and slows more.
+
+Below about 345 W the clock collapses, to 345 MHz at 200 W. The likely cause is that the voltage
+reaches its minimum, so further savings have to come from the clock alone. I didn't measure
+voltage, so that part is a hypothesis.
