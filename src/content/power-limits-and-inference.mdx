@@ -4,7 +4,7 @@ export const metadata = {
   summary: "Cut an H100 from 700 W to 415 W and decode keeps 96% of its speed. Prefill keeps 74%. Here's why.",
 };
 
-## Two kinds of work
+## Prefill and decode
 
 Every GPU runs under a power limit, and the limit is adjustable. I wanted to know what lowering it
 costs a GPU that is serving a language model, in both speed and energy.
@@ -13,7 +13,7 @@ Inference is really two workloads. **Prefill** processes the prompt, all of its 
 parallel. **Decode** generates the response, one token per step. They stress the hardware in
 opposite ways, so a single blended number hides most of what happens. I measured them separately.
 
-## The setup
+## Sweeping the power limit
 
 I ran vLLM on eight H100 SXM GPUs, each rated for 700 W: four serving Qwen3-8B and four serving
 Qwen3-14B. I stepped each GPU's power limit from 700 W down to 200 W. At each step I ran
@@ -24,13 +24,13 @@ Each GPU is compared against its own uncapped run, which removes chip-to-chip va
 models agree within a few points, so the charts show Qwen3-8B. The code and raw data are on
 [GitHub](https://github.com/nrcrews/tokens-per-watt).
 
-## Decode barely slows
+## Decode shrugs off the cap
 
 At 415 W, about 60% of the rated power, decode keeps 96% of its throughput. Prefill keeps 74%.
 
 ![Speed against power limit](/images/power-limits-and-inference/speed.png)
 
-## Each token gets cheaper
+## Slower clocks, cheaper tokens
 
 The lower limit also makes both phases more efficient. At 415 W, decode produces 23% more tokens
 per joule and prefill 25% more. For decode, that is a fifth less energy per token for a 4% loss in
@@ -38,7 +38,7 @@ speed.
 
 ![Tokens per joule against power limit](/images/power-limits-and-inference/efficiency.png)
 
-## The floor
+## Where the savings stop
 
 The gains have a floor. Below roughly 345 W, throughput drops sharply in both phases, and at
 200 W decode runs at half its uncapped speed. Batch size moves this line: at 270 W, decode keeps
@@ -49,7 +49,7 @@ The gains have a floor. Below roughly 345 W, throughput drops sharply in both ph
 The same sweep on the H100 PCIe, a 350 W part, shows the same split without the sharp drop. Decode
 still keeps 87% of its speed at 200 W.
 
-## Why it happens
+## Compute-bound versus memory-bound
 
 A power limit is enforced through the core clock. When the GPU would exceed its limit, it lowers
 its clock until it doesn't. The question is which workloads depend on that clock.
@@ -76,3 +76,14 @@ the clock.
 The sharp drop below 345 W is likely the voltage floor. Once the voltage reaches its minimum,
 further power savings can only come from the clock, which falls to 345 MHz at 200 W. I didn't
 measure voltage directly, so this explanation is an inference rather than a result.
+
+## What it means for inference power
+
+If power is what limits inference capacity, and it increasingly is, then a GPU's power limit is a
+tuning parameter rather than a fixed spec. These results suggest setting it by workload. Decode
+can run well below full power with almost no loss in speed, and the watts it gives back can run
+more GPUs. Prefill needs the full budget. Serving systems that already split prefill and decode
+onto separate GPUs could cap only the decode side.
+
+Most work on inference efficiency goes into faster chips and smaller models. This is a gain on
+hardware that already exists, and it starts with one command.
